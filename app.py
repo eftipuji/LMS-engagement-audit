@@ -1,4 +1,9 @@
-
+"""
+LMS Berbasis Engagement Audit — Streamlit App
+Prototipe deteksi dini Quiet Quitting untuk SMP/SMK
+Kerangka: Student Engagement Audit (4 Modul + EWS AI)
+Dibuat oleh: Tim Universitas Pekalongan
+"""
 
 import streamlit as st
 import pandas as pd
@@ -19,116 +24,26 @@ st.set_page_config(
 # ─── CUSTOM CSS ───────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-/* ============================================================
-   FORCE LIGHT MODE — mencegah tema gelap perangkat memengaruhi
-   sidebar, sub-menu, tabs, dropdown, dan form.
-   ============================================================ */
-html, body {
-    color-scheme: light !important;
-}
-
+/* ── Global ── */
 #MainMenu, footer, header {visibility: hidden;}
-[data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"] {
-    background-color: #FFFFFF !important;
-}
-
 .block-container {padding-top: 1.2rem; padding-bottom: 2rem;}
 
-/* ── Latar aplikasi utama (selalu terang) ── */
-[data-testid="stAppViewContainer"], .stApp, .main {
-    background-color: #F4F6FB !important;
-}
-
-/* ── Sidebar: TERANG (dikunci) ── */
-[data-testid="stSidebar"], [data-testid="stSidebar"] > div {
+/* ── Sidebar: TERANG ── */
+[data-testid="stSidebar"] {
     background: #FFFFFF !important;
     border-right: 2px solid #E8ECF4;
 }
 [data-testid="stSidebar"] * {
     color: #1E2761 !important;
 }
-[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
-[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] div,
-[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] span {
-    color: #4A5568 !important;
-}
 [data-testid="stSidebar"] .stRadio label {
     color: #1E2761 !important;
     font-weight: 500;
     font-size: 14px;
 }
-
-/* ── Widget input umum (sidebar & konten utama) tetap terang ── */
-.stTextInput input,
-.stNumberInput input,
-.stTextArea textarea,
-div[data-baseweb="select"] > div,
-div[data-baseweb="base-input"] {
-    background-color: #FFFFFF !important;
-    color: #1E2761 !important;
-    border-color: #E8ECF4 !important;
-}
-[data-testid="stWidgetLabel"] p,
-[data-testid="stWidgetLabel"] label {
-    color: #1E2761 !important;
-}
-
-/* ── PENTING: dropdown/popover BaseWeb dirender sebagai PORTAL di
-       luar elemen sidebar/parent, jadi harus ditarget secara GLOBAL
-       agar tidak ikut tema gelap perangkat. Ini adalah sumber utama
-       "menu gelap" pada multiselect/selectbox. ── */
-div[data-baseweb="popover"],
-div[data-baseweb="menu"],
-ul[role="listbox"],
-li[role="option"] {
-    background-color: #FFFFFF !important;
-    color: #1E2761 !important;
-}
-li[role="option"]:hover,
-li[aria-selected="true"] {
-    background-color: #F0F3FA !important;
-    color: #1E2761 !important;
-}
-span[data-baseweb="tag"] {
-    background-color: #1E2761 !important;
-    color: #FFFFFF !important;
-}
-
-/* ── Tabs (Sub-menu horizontal) — selalu terang ── */
-.stTabs [data-baseweb="tab-list"] {
-    background: #F0F3FA !important;
-    border-radius: 10px;
-    gap: 4px;
-    padding: 4px;
-}
-.stTabs [data-baseweb="tab"] {
-    border-radius: 8px;
-    color: #6B7694 !important;
-    font-weight: 500;
-    background-color: transparent !important;
-}
-.stTabs [aria-selected="true"] {
-    background: #1E2761 !important;
-    color: #FFFFFF !important;
-    font-weight: 700;
-}
-
-/* ── Form container (st.form) ── */
-[data-testid="stForm"] {
-    background-color: #FFFFFF !important;
-    border: 1.5px solid #E8ECF4 !important;
-    border-radius: 14px !important;
-    padding: 18px 20px !important;
-}
-
-/* ── Expander ── */
-[data-testid="stExpander"] {
-    background-color: #FFFFFF !important;
-    border: 1.5px solid #E8ECF4 !important;
-    border-radius: 10px !important;
-}
-[data-testid="stExpander"] summary, [data-testid="stExpander"] p {
-    color: #1E2761 !important;
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] div {
+    color: #4A5568 !important;
 }
 
 /* ── Metric cards ── */
@@ -151,10 +66,36 @@ div[data-testid="metric-container"] div[data-testid="stMetricValue"] {
     color: #1E2761 !important;
 }
 
+/* ── Tabs (sub-menu) — TERANG, tidak gelap ── */
+.stTabs [data-baseweb="tab-list"] {
+    background: #F0F3FA;
+    border-radius: 10px;
+    gap: 4px;
+    padding: 4px;
+}
+.stTabs [data-baseweb="tab"] {
+    border-radius: 8px;
+    color: #6B7694;
+    font-weight: 500;
+}
+.stTabs [data-baseweb="tab"] p {
+    color: inherit !important;
+}
+.stTabs [aria-selected="true"] {
+    background: #FFFFFF !important;
+    color: #1E2761 !important;
+    font-weight: 700;
+    border: 1.5px solid #1E2761;
+    box-shadow: 0 1px 4px rgba(30,39,97,0.10);
+}
+.stTabs [aria-selected="true"] p {
+    color: #1E2761 !important;
+}
+
 /* ── Buttons ── */
 .stButton > button {
     background: #1E2761;
-    color: #FFFFFF !important;
+    color: #FFFFFF;
     border: none;
     border-radius: 10px;
     font-weight: 700;
@@ -163,14 +104,13 @@ div[data-testid="metric-container"] div[data-testid="stMetricValue"] {
 }
 .stButton > button:hover {
     background: #F5A623;
-    color: #1E2761 !important;
+    color: #1E2761;
 }
-.stButton > button p { color: inherit !important; }
 
 /* ── Download button ── */
 .stDownloadButton > button {
     background: #2EC47F;
-    color: #FFFFFF !important;
+    color: #FFFFFF;
     border: none;
     border-radius: 10px;
     font-weight: 700;
@@ -206,42 +146,11 @@ div[data-testid="metric-container"] div[data-testid="stMetricValue"] {
 .badge-sedang { background:#F5C84218; color:#A07A05; border:1px solid #F5C84250; border-radius:6px; padding:3px 10px; font-size:12px; font-weight:700; }
 .badge-rendah { background:#2EC47F18; color:#1A8A58; border:1px solid #2EC47F50; border-radius:6px; padding:3px 10px; font-size:12px; font-weight:700; }
 
-/* ── Kotak credit pembuat (menonjol) ── */
-.credit-box-top {
-    background: linear-gradient(135deg, #1E2761 0%, #2C3A8C 100%);
-    border-radius: 12px;
-    padding: 14px 16px;
-    text-align: center;
-    margin-bottom: 14px;
-}
-.credit-box-top .credit-title {
-    color: #FFFFFF !important;
-    font-weight: 900;
-    font-size: 13.5px;
-    letter-spacing: 0.3px;
-}
-.credit-box-top .credit-sub {
-    color: #CADCFC !important;
-    font-size: 11px;
-    margin-top: 3px;
-}
-.credit-inline {
-    display: inline-block;
-    background: #1E276112;
-    border: 1px solid #1E276140;
-    border-radius: 8px;
-    padding: 6px 14px;
-    color: #1E2761 !important;
-    font-size: 12.5px;
-    font-weight: 700;
-    margin: 6px 0 18px;
-}
-
 /* ── Footer ── */
 .footer-box {
     background: #1E2761;
     border-radius: 12px;
-    padding: 16px 20px;
+    padding: 14px 20px;
     text-align: center;
     margin-top: 8px;
 }
@@ -249,7 +158,11 @@ div[data-testid="metric-container"] div[data-testid="stMetricValue"] {
 /* ── Dataframe ── */
 .stDataFrame { border-radius: 10px; border: 1px solid #E8ECF4; }
 
-/* ── Slider ── */
+/* ── Form inputs ── */
+.stTextInput input, .stSelectbox select, .stTextArea textarea {
+    border-radius: 8px !important;
+    border: 1.5px solid #E8ECF4 !important;
+}
 .stSlider [data-testid="stSlider"] { accent-color: #1E2761; }
 </style>
 """, unsafe_allow_html=True)
@@ -260,23 +173,17 @@ COLORS = {"KRITIS": "#E55353", "TINGGI": "#F5A623", "SEDANG": "#F5C842", "RENDAH
 def risk_color(r):
     return COLORS.get(r, "#6B7694")
 
-def safe_int(value, default=0):
-    """Konversi aman ke int — mencegah crash akibat NaN/None/string kosong
-    pada kolom numerik (dipakai khususnya di Modul Kualitas Guru agar
-    Radar Chart & Kartu Guru tidak error saat data kosong/baru di-load)."""
-    try:
-        if value is None:
-            return default
-        if pd.isna(value):
-            return default
-        return int(value)
-    except (TypeError, ValueError):
-        return default
+def hex_to_rgba(hex_color, alpha=0.16):
+    """Konversi '#RRGGBB' + alpha → string 'rgba(r,g,b,a)' yang valid untuk Plotly.
+    (Plotly tidak menerima hex 8-digit seperti '#1E276128' untuk properti warna)."""
+    hex_color = hex_color.lstrip("#")
+    r = int(hex_color[0:2], 16)
+    g = int(hex_color[2:4], 16)
+    b = int(hex_color[4:6], 16)
+    return f"rgba({r},{g},{b},{alpha})"
 
 def bar_h(value, max_val=100, color="#1E2761"):
-    value = safe_int(value, 0)
-    pct = int((value / max_val) * 100) if max_val else 0
-    pct = max(0, min(100, pct))
+    pct = int((value / max_val) * 100)
     return f"""
     <div style="margin-bottom:4px;">
       <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
@@ -364,16 +271,8 @@ if "df_teacher" not in st.session_state:
 
 # ─── SIDEBAR ─────────────────────────────────────────────────────────────────
 with st.sidebar:
-    # ── Branding utama: Credit pembuat (paling atas, menonjol) ──
     st.markdown("""
-    <div class='credit-box-top'>
-        <div class='credit-title'>🎓 Dibuat oleh: Tim Universitas Pekalongan</div>
-        <div class='credit-sub'>FKIP · Pendidikan Matematika</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-    <div style='padding:0 0 16px;'>
+    <div style='padding:8px 0 16px;'>
         <div style='color:#1E2761;font-weight:900;font-size:18px;letter-spacing:0.5px;'>⚡ LMS ENGAGEMENT</div>
         <div style='color:#6B7694;font-size:12px;margin-top:2px;'>Audit Psikologis Real-Time</div>
         <hr style='border-color:#E8ECF4;margin-top:14px;'>
@@ -407,6 +306,17 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
+    st.markdown("""
+    <div style='background:#1E2761;border-radius:10px;padding:12px 14px;text-align:center;margin-top:12px;'>
+        <div style='color:#FFFFFF;font-size:11px;font-weight:700;letter-spacing:0.5px;'>
+            🎓 Tim Universitas Pekalongan
+        </div>
+        <div style='color:#CADCFC;font-size:10px;margin-top:3px;'>
+            FKIP · Pendidikan Matematika
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
 # ─── FILTER DATA ─────────────────────────────────────────────────────────────
 df_filtered = df[df["Kelas"].isin(kelas_filter) & df["Risiko"].isin(risiko_filter)]
 
@@ -421,11 +331,9 @@ if halaman == "🏠  Dashboard Utama":
         <h1 style='color:#1E2761;font-size:26px;font-weight:900;margin:0 0 4px;'>
             Dashboard Engagement Audit
         </h1>
-        <p style='color:#6B7694;font-size:14px;margin:0 0 8px;'>
+        <p style='color:#6B7694;font-size:14px;margin:0 0 20px;'>
             Sistem deteksi dini <em>Quiet Quitting</em> — integrasi data LMS, Dapodik &amp; sosial-ekonomi
-        </p>
-        <div class='credit-inline'>🎓 Dibuat oleh: Tim Universitas Pekalongan</div>
-        """, unsafe_allow_html=True)
+        </p>""", unsafe_allow_html=True)
     with col_h2:
         st.markdown(f"<div style='text-align:right;color:#6B7694;font-size:12px;padding-top:28px;'>{datetime.now().strftime('%d %b %Y, %H:%M')}</div>", unsafe_allow_html=True)
 
@@ -636,133 +544,112 @@ elif halaman == "🧠  Cognitive Load Monitor":
 # ════════════════════════════════════════════════════════════
 elif halaman == "👩‍🏫  Kualitas Guru":
     st.markdown("<h1 style='color:#1E2761;font-size:22px;font-weight:900;margin:0 0 4px;'>👩‍🏫 Modul 3: Indeks Kualitas Kepemimpinan Guru</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#6B7694;font-size:14px;margin:0 0 6px;'>Mengukur dukungan emosional relasional yang mempengaruhi 58,7% variance motivasi siswa.</p>", unsafe_allow_html=True)
-    st.caption(f"👥 Total guru terdaftar saat ini: **{len(st.session_state.df_teacher)}** guru")
+    st.markdown("<p style='color:#6B7694;font-size:14px;margin:0 0 16px;'>Mengukur dukungan emosional relasional yang mempengaruhi 58,7% variance motivasi siswa.</p>", unsafe_allow_html=True)
 
     tab_guru1, tab_guru2, tab_guru3 = st.tabs(["📊 Radar Indeks", "🃏 Kartu Guru", "➕ Input / Tambah Guru"])
 
-    # Snapshot data guru di AWAL render — tab Radar & Kartu akan selalu
-    # konsisten dengan st.session_state.df_teacher pada run ini, dan akan
-    # otomatis ter-update pada run berikutnya setelah ada perubahan (tambah/
-    # edit/hapus) di Tab 3 karena perubahan tersebut diikuti st.rerun().
-    df_t = st.session_state.df_teacher
-
     # ── TAB 1: Radar ──────────────────────────────────────────
     with tab_guru1:
-        if df_t.empty:
-            st.info("📭 Belum ada data guru. Tambahkan data melalui tab **'➕ Input / Tambah Guru'**.")
-        else:
-            categories = ["Kecepatan Respons", "Umpan Balik", "Konsistensi", "Frekuensi Konseling", "Indeks Total"]
-            palette    = ["#1E2761", "#F5A623", "#2EC47F", "#E55353",
-                          "#9B59B6", "#00B4D8", "#E67E22", "#27AE60"]
+        df_t = st.session_state.df_teacher
+        categories = ["Kecepatan Respons", "Umpan Balik", "Konsistensi", "Frekuensi Konseling", "Indeks Total"]
+        palette    = ["#1E2761", "#F5A623", "#2EC47F", "#E55353",
+                      "#9B59B6", "#00B4D8", "#E67E22", "#27AE60"]
 
-            fig_radar = go.Figure()
-            for i, (_, t) in enumerate(df_t.iterrows()):
-                respons_jam    = safe_int(t.get("Respons_jam"), 24)
-                respons_norm   = max(0, 100 - respons_jam)
-                konseling_jml  = safe_int(t.get("Konseling"), 0)
-                konseling_norm = min(100, konseling_jml * 7)
-                vals = [
-                    respons_norm,
-                    safe_int(t.get("Umpan_balik"), 0),
-                    safe_int(t.get("Konsistensi"), 0),
-                    konseling_norm,
-                    safe_int(t.get("Indeks"), 0),
-                ]
-                col       = palette[i % len(palette)]
-                nama_trace = str(t.get("Nama", f"Guru {i + 1}"))
-                fig_radar.add_trace(go.Scatterpolar(
-                    r=vals + [vals[0]],
-                    theta=categories + [categories[0]],
-                    fill="toself", name=nama_trace,
-                    line_color=col, fillcolor=col + "28",
-                ))
+        fig_radar = go.Figure()
+        for i, (_, t) in enumerate(df_t.iterrows()):
+            respons_norm  = max(0, 100 - int(t["Respons_jam"]))
+            konseling_norm = min(100, int(t["Konseling"]) * 7)
+            vals = [respons_norm, int(t["Umpan_balik"]), int(t["Konsistensi"]), konseling_norm, int(t["Indeks"])]
+            col  = palette[i % len(palette)]
+            fig_radar.add_trace(go.Scatterpolar(
+                r=vals + [vals[0]],
+                theta=categories + [categories[0]],
+                fill="toself", name=str(t["Nama"]),
+                line_color=col, fillcolor=hex_to_rgba(col, 0.16),
+            ))
 
-            fig_radar.update_layout(
-                polar=dict(
-                    bgcolor="#F8F9FE",
-                    radialaxis=dict(visible=True, range=[0, 100], gridcolor="#E8ECF4",
-                                    tickfont=dict(color="#6B7694")),
-                    angularaxis=dict(gridcolor="#E8ECF4", tickfont=dict(color="#1E2761")),
-                ),
-                paper_bgcolor="#FFFFFF", font={"color": "#1E2761"},
-                height=420, margin=dict(t=30, b=20, l=20, r=20),
-                legend=dict(bgcolor="#F0F3FA", bordercolor="#E8ECF4"),
-            )
-            st.plotly_chart(fig_radar, use_container_width=True, config={"displayModeBar": False})
-            st.caption("💡 Semakin lebar area radar, semakin tinggi performa kepemimpinan relasional guru.")
+        fig_radar.update_layout(
+            polar=dict(
+                bgcolor="#F8F9FE",
+                radialaxis=dict(visible=True, range=[0, 100], gridcolor="#E8ECF4",
+                                tickfont=dict(color="#6B7694")),
+                angularaxis=dict(gridcolor="#E8ECF4", tickfont=dict(color="#1E2761")),
+            ),
+            paper_bgcolor="#FFFFFF", font={"color": "#1E2761"},
+            height=400, margin=dict(t=30, b=20, l=20, r=20),
+            legend=dict(bgcolor="#F0F3FA", bordercolor="#E8ECF4"),
+        )
+        st.plotly_chart(fig_radar, use_container_width=True, config={"displayModeBar": False})
 
     # ── TAB 2: Kartu Guru ─────────────────────────────────────
     with tab_guru2:
-        if df_t.empty:
-            st.info("📭 Belum ada data guru untuk ditampilkan. Tambahkan data melalui tab **'➕ Input / Tambah Guru'**.")
-        else:
-            cols_card = st.columns(2)
-            for idx, (_, t) in enumerate(df_t.iterrows()):
-                nama_guru     = str(t.get("Nama", "-"))
-                mapel_guru    = str(t.get("Mapel", "-"))
-                indeks_val    = safe_int(t.get("Indeks"), 0)
-                respons_val   = safe_int(t.get("Respons_jam"), 0)
-                konseling_val = safe_int(t.get("Konseling"), 0)
-                umpan_val     = safe_int(t.get("Umpan_balik"), 0)
-                konsisten_val = safe_int(t.get("Konsistensi"), 0)
+        df_t = st.session_state.df_teacher
+        cols_card = st.columns(2)
+        for idx, (_, t) in enumerate(df_t.iterrows()):
+            nama_guru    = str(t["Nama"])
+            mapel_guru   = str(t["Mapel"])
+            indeks_val   = int(t["Indeks"])
+            respons_val  = int(t["Respons_jam"])
+            konseling_val = int(t["Konseling"])
+            umpan_val    = int(t["Umpan_balik"])
+            konsisten_val = int(t["Konsistensi"])
 
-                if indeks_val > 80:
-                    ind_color = "#2EC47F"
-                elif indeks_val > 60:
-                    ind_color = "#1E2761"
-                elif indeks_val > 45:
-                    ind_color = "#F5A623"
-                else:
-                    ind_color = "#E55353"
+            if indeks_val > 80:
+                ind_color = "#2EC47F"
+            elif indeks_val > 60:
+                ind_color = "#1E2761"
+            elif indeks_val > 45:
+                ind_color = "#F5A623"
+            else:
+                ind_color = "#E55353"
 
-                respons_ok      = respons_val < 30
-                respons_color   = "#2EC47F" if respons_ok else "#F5A623"
-                respons_icon    = "✓" if respons_ok else "⚠️"
-                konseling_color = "#E55353" if konseling_val <= 3 else "#2EC47F"
+            respons_ok    = respons_val < 30
+            respons_color = "#2EC47F" if respons_ok else "#F5A623"
+            respons_icon  = "✓" if respons_ok else "⚠️"
+            konseling_color = "#E55353" if konseling_val <= 3 else "#2EC47F"
 
-                umpan_bar     = bar_h(umpan_val,     color="#1E2761")
-                konsisten_bar = bar_h(konsisten_val, color="#2EC47F")
+            umpan_bar    = bar_h(umpan_val,     color="#1E2761")
+            konsisten_bar = bar_h(konsisten_val, color="#2EC47F")
 
-                with cols_card[idx % 2]:
-                    st.markdown(f"""
-                    <div class='kpi-card'>
-                      <div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;'>
-                        <div>
-                          <div style='color:#1E2761;font-weight:800;font-size:17px;'>{nama_guru}</div>
-                          <div style='color:#6B7694;font-size:12px;'>{mapel_guru}</div>
-                        </div>
-                        <div style='text-align:center;'>
-                          <div style='font-size:34px;font-weight:900;color:{ind_color};line-height:1;'>{indeks_val}</div>
-                          <div style='font-size:10px;color:#6B7694;'>Indeks Kualitas</div>
-                        </div>
-                      </div>
-                      <div style='display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;'>
-                        <div>
-                          <div style='font-size:11px;color:#6B7694;'>⏱ Kecepatan Respons</div>
-                          <div style='font-weight:700;color:{respons_color};'>{respons_val} jam {respons_icon}</div>
-                        </div>
-                        <div>
-                          <div style='font-size:11px;color:#6B7694;'>💬 Sesi Konseling</div>
-                          <div style='font-weight:700;color:{konseling_color};'>{konseling_val} sesi/bulan</div>
-                        </div>
-                      </div>
-                      <div style='font-size:11px;color:#6B7694;margin-bottom:4px;'>Bobot Umpan Balik</div>
-                      {umpan_bar}
-                      <div style='font-size:11px;color:#6B7694;margin-bottom:4px;margin-top:8px;'>Konsistensi Penilaian</div>
-                      {konsisten_bar}
-                    </div>""", unsafe_allow_html=True)
+            with cols_card[idx % 2]:
+                st.markdown(f"""
+                <div class='kpi-card'>
+                  <div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;'>
+                    <div>
+                      <div style='color:#1E2761;font-weight:800;font-size:17px;'>{nama_guru}</div>
+                      <div style='color:#6B7694;font-size:12px;'>{mapel_guru}</div>
+                    </div>
+                    <div style='text-align:center;'>
+                      <div style='font-size:34px;font-weight:900;color:{ind_color};line-height:1;'>{indeks_val}</div>
+                      <div style='font-size:10px;color:#6B7694;'>Indeks Kualitas</div>
+                    </div>
+                  </div>
+                  <div style='display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;'>
+                    <div>
+                      <div style='font-size:11px;color:#6B7694;'>⏱ Kecepatan Respons</div>
+                      <div style='font-weight:700;color:{respons_color};'>{respons_val} jam {respons_icon}</div>
+                    </div>
+                    <div>
+                      <div style='font-size:11px;color:#6B7694;'>💬 Sesi Konseling</div>
+                      <div style='font-weight:700;color:{konseling_color};'>{konseling_val} sesi/bulan</div>
+                    </div>
+                  </div>
+                  <div style='font-size:11px;color:#6B7694;margin-bottom:4px;'>Bobot Umpan Balik</div>
+                  {umpan_bar}
+                  <div style='font-size:11px;color:#6B7694;margin-bottom:4px;margin-top:8px;'>Konsistensi Penilaian</div>
+                  {konsisten_bar}
+                </div>""", unsafe_allow_html=True)
 
     # ── TAB 3: Input Guru Baru ────────────────────────────────
     with tab_guru3:
         st.markdown("<div style='color:#1E2761;font-weight:700;font-size:15px;margin-bottom:4px;'>➕ Tambah / Perbarui Data Guru</div>", unsafe_allow_html=True)
-        st.markdown("<p style='color:#6B7694;font-size:13px;margin-bottom:16px;'>Isi formulir di bawah ini untuk menambahkan guru baru ke dalam sistem. Jika nama sudah ada, datanya akan diperbarui.</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color:#6B7694;font-size:13px;margin-bottom:16px;'>Isi formulir di bawah ini untuk menambahkan guru baru ke dalam sistem.</p>", unsafe_allow_html=True)
 
-        with st.form("form_guru", clear_on_submit=True):
+        with st.form("form_guru"):
             fg1, fg2 = st.columns(2)
             with fg1:
-                inp_nama    = st.text_input("Nama Lengkap Guru *", placeholder="contoh: Bu Ratna")
-                inp_mapel   = st.text_input("Mata Pelajaran *",     placeholder="contoh: Matematika")
+                inp_nama   = st.text_input("Nama Lengkap Guru *", placeholder="contoh: Bu Ratna")
+                inp_mapel  = st.text_input("Mata Pelajaran *",     placeholder="contoh: Matematika")
                 inp_respons = st.number_input("Kecepatan Respons (jam)", min_value=1, max_value=168, value=24,
                                               help="Rata-rata waktu membalas pesan/tugas dalam jam")
             with fg2:
@@ -770,8 +657,8 @@ elif halaman == "👩‍🏫  Kualitas Guru":
                 inp_konsisten = st.slider("Konsistensi Penilaian (0–100)", 0, 100, 75)
                 inp_konseling = st.number_input("Sesi Konseling per Bulan", min_value=0, max_value=30, value=4)
 
-            # Hitung indeks otomatis (preview real-time sebelum disimpan)
-            respons_norm_inp   = max(0, 100 - inp_respons)
+            # Hitung indeks otomatis
+            respons_norm_inp  = max(0, 100 - inp_respons)
             konseling_norm_inp = min(100, inp_konseling * 7)
             indeks_hitung = int(respons_norm_inp * 0.25 + inp_umpan * 0.35 + inp_konsisten * 0.25 + konseling_norm_inp * 0.15)
 
@@ -791,63 +678,44 @@ elif halaman == "👩‍🏫  Kualitas Guru":
                 guru_baru = {
                     "Nama": inp_nama.strip(),
                     "Mapel": inp_mapel.strip(),
-                    "Respons_jam": int(inp_respons),
-                    "Umpan_balik": int(inp_umpan),
-                    "Konsistensi": int(inp_konsisten),
-                    "Konseling": int(inp_konseling),
-                    "Indeks": int(indeks_hitung),
+                    "Respons_jam": inp_respons,
+                    "Umpan_balik": inp_umpan,
+                    "Konsistensi": inp_konsisten,
+                    "Konseling": inp_konseling,
+                    "Indeks": indeks_hitung,
                 }
-                # Cek apakah nama sudah ada (case-insensitive) → update, belum ada → tambah
-                nama_list = st.session_state.df_teacher["Nama"].astype(str).str.lower().tolist()
+                # Cek apakah nama sudah ada → update, belum ada → tambah
+                nama_list = st.session_state.df_teacher["Nama"].str.lower().tolist()
                 if inp_nama.strip().lower() in nama_list:
                     idx_update = st.session_state.df_teacher[
-                        st.session_state.df_teacher["Nama"].astype(str).str.lower() == inp_nama.strip().lower()
+                        st.session_state.df_teacher["Nama"].str.lower() == inp_nama.strip().lower()
                     ].index[0]
                     for k, v in guru_baru.items():
                         st.session_state.df_teacher.at[idx_update, k] = v
-                    st.session_state["_guru_msg"] = f"✅ Data **{inp_nama.strip()}** berhasil diperbarui!"
+                    st.success(f"✅ Data **{inp_nama}** berhasil diperbarui!")
                 else:
                     new_row = pd.DataFrame([guru_baru])
                     st.session_state.df_teacher = pd.concat(
                         [st.session_state.df_teacher, new_row], ignore_index=True
                     )
-                    st.session_state["_guru_msg"] = f"✅ Guru **{inp_nama.strip()}** berhasil ditambahkan ke sistem!"
-                # Rerun agar tabel & Radar Chart di tab sebelah langsung sinkron
-                # dengan data terbaru. Pesan sukses ditunda lewat session_state
-                # supaya tetap terlihat SETELAH rerun (bukan hilang sebelum tampil).
+                    st.success(f"✅ Guru **{inp_nama}** berhasil ditambahkan ke sistem!")
                 st.rerun()
-
-        # Notifikasi hasil aksi terakhir (tambah/update/hapus) — tampil setelah rerun
-        if "_guru_msg" in st.session_state:
-            st.success(st.session_state.pop("_guru_msg"))
 
         # Tabel data guru saat ini
         st.markdown("<div style='color:#1E2761;font-weight:700;font-size:14px;margin:20px 0 8px;'>📋 Daftar Guru Saat Ini</div>", unsafe_allow_html=True)
-        if st.session_state.df_teacher.empty:
-            st.info("Belum ada data guru yang tersimpan.")
-        else:
-            st.dataframe(st.session_state.df_teacher, use_container_width=True, hide_index=True)
+        st.dataframe(st.session_state.df_teacher, use_container_width=True, hide_index=True)
 
         # Tombol hapus
         st.markdown("<div style='color:#6B7694;font-size:13px;margin-top:12px;margin-bottom:6px;'>🗑️ Hapus data guru:</div>", unsafe_allow_html=True)
-        if st.session_state.df_teacher.empty:
-            st.caption("Tidak ada data guru untuk dihapus.")
-        else:
-            nama_hapus = st.selectbox("Pilih guru yang akan dihapus",
-                                      ["— pilih —"] + st.session_state.df_teacher["Nama"].tolist(),
-                                      key="hapus_guru")
-            if st.button("Hapus Guru Terpilih") and nama_hapus != "— pilih —":
-                st.session_state.df_teacher = st.session_state.df_teacher[
-                    st.session_state.df_teacher["Nama"] != nama_hapus
-                ].reset_index(drop=True)
-                # PENTING: bersihkan state selectbox sebelum rerun. Tanpa baris
-                # ini, Streamlit akan melempar StreamlitAPIException karena
-                # opsi "nama_hapus" yang tersimpan di session_state sudah tidak
-                # ada lagi di daftar opsi baru (guru tersebut sudah dihapus).
-                if "hapus_guru" in st.session_state:
-                    del st.session_state["hapus_guru"]
-                st.session_state["_guru_msg"] = f"🗑️ Data **{nama_hapus}** telah dihapus."
-                st.rerun()
+        nama_hapus = st.selectbox("Pilih guru yang akan dihapus",
+                                  ["— pilih —"] + st.session_state.df_teacher["Nama"].tolist(),
+                                  key="hapus_guru")
+        if st.button("Hapus Guru Terpilih") and nama_hapus != "— pilih —":
+            st.session_state.df_teacher = st.session_state.df_teacher[
+                st.session_state.df_teacher["Nama"] != nama_hapus
+            ].reset_index(drop=True)
+            st.success(f"🗑️ Data **{nama_hapus}** telah dihapus.")
+            st.rerun()
 
 
 # ════════════════════════════════════════════════════════════
@@ -970,7 +838,7 @@ elif halaman == "📋  Pulse Survey":
     st.markdown("<h1 style='color:#1E2761;font-size:22px;font-weight:900;margin:0 0 4px;'>📋 Pulse Survey Mingguan</h1>", unsafe_allow_html=True)
     st.markdown("<p style='color:#6B7694;font-size:14px;margin:0 0 20px;'>Hanya 5 menit. Respons direkam dan langsung dianalisis sistem setiap Jumat.</p>", unsafe_allow_html=True)
 
-    st.markdown(f"<div style='color:#1E2761;font-weight:700;font-size:13px;margin-bottom:12px;'>📅 Minggu ke-6 · {datetime.now().strftime('%d %B %Y')}</div>", unsafe_allow_html=True)
+    st.markdown("<div style='color:#1E2761;font-weight:700;font-size:13px;margin-bottom:12px;'>📅 Minggu ke-6 · 27 Juni 2026</div>", unsafe_allow_html=True)
 
     with st.form("pulse_survey"):
         ps1, ps2 = st.columns(2)
@@ -1144,15 +1012,15 @@ elif halaman == "📊  Laporan & Ekspor":
 # ── Footer global ──────────────────────────────────────────────────────────────
 st.markdown("<hr style='border-color:#E8ECF4;margin-top:40px;'>", unsafe_allow_html=True)
 st.markdown("""
-<div class='footer-box'>
-    <div style='color:#FFFFFF;font-weight:900;font-size:15px;letter-spacing:0.5px;'>
-        🎓 Dibuat oleh: Tim Universitas Pekalongan
+<div style='text-align:center;padding:16px 0 8px;'>
+    <div style='color:#1E2761;font-weight:800;font-size:14px;letter-spacing:0.5px;'>
+        🎓 Tim Universitas Pekalongan
     </div>
-    <div style='color:#CADCFC;font-size:12px;margin-top:4px;'>
+    <div style='color:#6B7694;font-size:12px;margin-top:4px;'>
         FKIP · Program Studi Pendidikan Matematika · 2024/2025
     </div>
-    <div style='color:#8FA6D9;font-size:11px;margin-top:6px;'>
-        LMS Engagement Audit v2.1 · Prototipe Deteksi Dini Quiet Quitting
+    <div style='color:#AABCD6;font-size:11px;margin-top:6px;'>
+        LMS Engagement Audit v2.0 · Prototipe Deteksi Dini Quiet Quitting
     </div>
 </div>
 """, unsafe_allow_html=True)
