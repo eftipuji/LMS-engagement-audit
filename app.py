@@ -332,7 +332,7 @@ if halaman == "🏠  Dashboard Utama":
             Dashboard Engagement Audit
         </h1>
         <p style='color:#6B7694;font-size:14px;margin:0 0 20px;'>
-            Sistem deteksi dini <em>Quiet Quitting</em> — integrasi data LMS, Dapodik &amp; sosial-ekonomi
+            Sistem deteksi dini <em>Quiet Quitting</em> (integrasi data LMS, Dapodik &amp; sosial-ekonomi)
         </p>""", unsafe_allow_html=True)
     with col_h2:
         st.markdown(f"<div style='text-align:right;color:#6B7694;font-size:12px;padding-top:28px;'>{datetime.now().strftime('%d %b %Y, %H:%M')}</div>", unsafe_allow_html=True)
@@ -417,7 +417,7 @@ elif halaman == "🔥  Burnout Detection":
     st.markdown("<h1 style='color:#1E2761;font-size:22px;font-weight:900;margin:0 0 4px;'>🔥 Modul 1: Burnout Detection Dashboard</h1>", unsafe_allow_html=True)
     st.markdown("<p style='color:#6B7694;font-size:14px;margin:0 0 20px;'>Mengidentifikasi profil Exhausted-Disengaged 6–12 bulan sebelum siswa menyerah.</p>", unsafe_allow_html=True)
 
-    tab1, tab2, tab3 = st.tabs(["📊 Peta Burnout", "📋 Detail Maslach", "📈 Tren per Kelas"])
+    tab1, tab2, tab3 = st.tabs(["📊 Peta Burnout", "📋 Detail Masalah", "📈 Tren per Kelas"])
 
     with tab1:
         fig_sc = px.scatter(df_filtered, x="Burnout", y="Engagement",
@@ -778,8 +778,7 @@ elif halaman == "⚖️  Fairness Perception":
 # ════════════════════════════════════════════════════════════
 elif halaman == "🤖  Early Warning AI":
     st.markdown("<h1 style='color:#1E2761;font-size:22px;font-weight:900;margin:0 0 4px;'>🤖 Mesin Prediksi: Early Warning System (EWS) Berbasis AI</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#6B7694;font-size:14px;margin:0 0 20px;'>Output sistem ini adalah <em>actionable care</em>, bukan sekadar pelaporan statistik. Algoritma: AI + SMOTE Engine.</p>", unsafe_allow_html=True)
-
+    
     levels = [
         {"level": "LEVEL MERAH",  "color": "#E55353", "risiko_key": "KRITIS",
          "action": "Intervensi segera. Koordinasi guru BK, wali kelas, kepala sekolah. Laporan ke Dapodik dalam 24 jam.", "icon": "🔴"},
@@ -1017,7 +1016,7 @@ st.markdown("""
         🎓 Tim Universitas Pekalongan
     </div>
     <div style='color:#6B7694;font-size:12px;margin-top:4px;'>
-        FKIP · Program Studi Pendidikan Matematika · 2024/2025
+        FKIP · Program Studi Pendidikan Matematika · 2025/2026
     </div>
     <div style='color:#AABCD6;font-size:11px;margin-top:6px;'>
         LMS Engagement Audit v2.0 · Prototipe Deteksi Dini Quiet Quitting
