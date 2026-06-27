@@ -301,7 +301,7 @@ with st.sidebar:
     st.markdown("""
     <div style='text-align:center;padding:4px 0 8px;'>
         <div style='color:#1E2761;font-weight:700;font-size:13px;'>SMP Negeri 2 Kota Pekalongan</div>
-        <div style='color:#6B7694;font-size:11px;margin-top:2px;'>Tahun Ajaran 2024/2025</div>
+        <div style='color:#6B7694;font-size:11px;margin-top:2px;'>Tahun Ajaran 2025/2026</div>
         <div style='color:#2EC47F;font-size:11px;margin-top:4px;'>● Sistem Aktif</div>
     </div>
     """, unsafe_allow_html=True)
