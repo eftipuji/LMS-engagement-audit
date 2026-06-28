@@ -345,7 +345,7 @@ with st.sidebar:
     st.markdown("""
     <div style='text-align:center;padding:4px 0 8px;'>
         <div style='color:#1E2761;font-weight:700;font-size:13px;'>SMP Negeri 2 Kota Pekalongan</div>
-        <div style='color:#6B7694;font-size:11px;margin-top:2px;'>Tahun Ajaran 2024/2025</div>
+        <div style='color:#6B7694;font-size:11px;margin-top:2px;'>Tahun Ajaran 2025/2026</div>
         <div style='color:#2EC47F;font-size:11px;margin-top:4px;'>● Sistem Aktif</div>
     </div>
     """, unsafe_allow_html=True)
@@ -461,7 +461,7 @@ elif halaman == "🔥  Burnout Detection":
     st.markdown("<h1 style='color:#1E2761;font-size:22px;font-weight:900;margin:0 0 4px;'>🔥 Modul 1: Burnout Detection Dashboard</h1>", unsafe_allow_html=True)
     st.markdown("<p style='color:#6B7694;font-size:14px;margin:0 0 20px;'>Mengidentifikasi profil Exhausted-Disengaged 6–12 bulan sebelum siswa menyerah.</p>", unsafe_allow_html=True)
 
-    tab1, tab2, tab3 = st.tabs(["📊 Peta Burnout", "📋 Detail Maslach", "📈 Tren per Kelas"])
+    tab1, tab2, tab3 = st.tabs(["📊 Peta Burnout", "📋 Detail Masalah", "📈 Tren per Kelas"])
 
     with tab1:
         fig_sc = px.scatter(df_filtered, x="Burnout", y="Engagement",
@@ -1074,7 +1074,7 @@ st.markdown("""
         🎓 Tim Universitas Pekalongan
     </div>
     <div style='color:#6B7694;font-size:12px;margin-top:4px;'>
-        FKIP · Program Studi Pendidikan Matematika · 2024/2025
+        FKIP · Program Studi Pendidikan Matematika · 2025/2026
     </div>
     <div style='color:#AABCD6;font-size:11px;margin-top:6px;'>
         LMS Engagement Audit v2.0 · Prototipe Deteksi Dini Quiet Quitting
