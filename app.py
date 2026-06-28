@@ -66,7 +66,7 @@ div[data-testid="metric-container"] div[data-testid="stMetricValue"] {
     color: #1E2761 !important;
 }
 
-/* ── Tabs (sub-menu) — TERANG, tidak gelap ── */
+/* ── Tabs ── */
 .stTabs [data-baseweb="tab-list"] {
     background: #F0F3FA;
     border-radius: 10px;
@@ -78,18 +78,10 @@ div[data-testid="metric-container"] div[data-testid="stMetricValue"] {
     color: #6B7694;
     font-weight: 500;
 }
-.stTabs [data-baseweb="tab"] p {
-    color: inherit !important;
-}
 .stTabs [aria-selected="true"] {
-    background: #FFFFFF !important;
-    color: #1E2761 !important;
+    background: #1E2761 !important;
+    color: #FFFFFF !important;
     font-weight: 700;
-    border: 1.5px solid #1E2761;
-    box-shadow: 0 1px 4px rgba(30,39,97,0.10);
-}
-.stTabs [aria-selected="true"] p {
-    color: #1E2761 !important;
 }
 
 /* ── Buttons ── */
@@ -173,15 +165,6 @@ COLORS = {"KRITIS": "#E55353", "TINGGI": "#F5A623", "SEDANG": "#F5C842", "RENDAH
 def risk_color(r):
     return COLORS.get(r, "#6B7694")
 
-def hex_to_rgba(hex_color, alpha=0.16):
-    """Konversi '#RRGGBB' + alpha → string 'rgba(r,g,b,a)' yang valid untuk Plotly.
-    (Plotly tidak menerima hex 8-digit seperti '#1E276128' untuk properti warna)."""
-    hex_color = hex_color.lstrip("#")
-    r = int(hex_color[0:2], 16)
-    g = int(hex_color[2:4], 16)
-    b = int(hex_color[4:6], 16)
-    return f"rgba({r},{g},{b},{alpha})"
-
 def bar_h(value, max_val=100, color="#1E2761"):
     pct = int((value / max_val) * 100)
     return f"""
@@ -227,6 +210,35 @@ PLOT_LAYOUT = dict(
     font={"color": "#1E2761"},
     margin=dict(t=30, b=20, l=20, r=20),
 )
+
+# ── Gradient warna untuk tabel TANPA matplotlib ──
+# (pandas Styler.background_gradient() butuh matplotlib sebagai dependency
+#  opsional; di Streamlit Cloud kadang tidak terpasang sehingga memicu
+#  ImportError. Fungsi di bawah meniru gradient RdYlGn / RdYlGn_r secara
+#  manual, jadi tidak butuh matplotlib sama sekali.)
+def _gradient_color(val, vmin, vmax, reverse=False):
+    if pd.isna(val):
+        return ""
+    if vmax == vmin:
+        norm = 0.5
+    else:
+        norm = (val - vmin) / (vmax - vmin)
+    norm = max(0.0, min(1.0, norm))
+    if reverse:
+        norm = 1 - norm
+    # interpolasi merah(low) -> kuning(mid) -> hijau(high)
+    if norm < 0.5:
+        r, g, b = 255, int(255 * (norm * 2)), 0
+    else:
+        r, g, b = int(255 * (1 - (norm - 0.5) * 2)), 255, 0
+    return f"background-color: rgba({r},{g},{b},0.75); color:#1E2761;"
+
+def make_gradient_styler(reverse=False):
+    """Pengganti drop-in untuk .style.background_gradient(subset=[...], cmap='RdYlGn'[_r])"""
+    def _style_func(s):
+        vmin, vmax = s.min(), s.max()
+        return [_gradient_color(v, vmin, vmax, reverse) for v in s]
+    return _style_func
 
 # ─── DATA ────────────────────────────────────────────────────────────────────
 @st.cache_data
@@ -301,7 +313,7 @@ with st.sidebar:
     st.markdown("""
     <div style='text-align:center;padding:4px 0 8px;'>
         <div style='color:#1E2761;font-weight:700;font-size:13px;'>SMP Negeri 2 Kota Pekalongan</div>
-        <div style='color:#6B7694;font-size:11px;margin-top:2px;'>Tahun Ajaran 2025/2026</div>
+        <div style='color:#6B7694;font-size:11px;margin-top:2px;'>Tahun Ajaran 2024/2025</div>
         <div style='color:#2EC47F;font-size:11px;margin-top:4px;'>● Sistem Aktif</div>
     </div>
     """, unsafe_allow_html=True)
@@ -332,7 +344,7 @@ if halaman == "🏠  Dashboard Utama":
             Dashboard Engagement Audit
         </h1>
         <p style='color:#6B7694;font-size:14px;margin:0 0 20px;'>
-            Sistem deteksi dini <em>Quiet Quitting</em> (integrasi data LMS, Dapodik &amp; sosial-ekonomi)
+            Sistem deteksi dini <em>Quiet Quitting</em> — integrasi data LMS, Dapodik &amp; sosial-ekonomi
         </p>""", unsafe_allow_html=True)
     with col_h2:
         st.markdown(f"<div style='text-align:right;color:#6B7694;font-size:12px;padding-top:28px;'>{datetime.now().strftime('%d %b %Y, %H:%M')}</div>", unsafe_allow_html=True)
@@ -417,7 +429,7 @@ elif halaman == "🔥  Burnout Detection":
     st.markdown("<h1 style='color:#1E2761;font-size:22px;font-weight:900;margin:0 0 4px;'>🔥 Modul 1: Burnout Detection Dashboard</h1>", unsafe_allow_html=True)
     st.markdown("<p style='color:#6B7694;font-size:14px;margin:0 0 20px;'>Mengidentifikasi profil Exhausted-Disengaged 6–12 bulan sebelum siswa menyerah.</p>", unsafe_allow_html=True)
 
-    tab1, tab2, tab3 = st.tabs(["📊 Peta Burnout", "📋 Detail Masalah", "📈 Tren per Kelas"])
+    tab1, tab2, tab3 = st.tabs(["📊 Peta Burnout", "📋 Detail Maslach", "📈 Tren per Kelas"])
 
     with tab1:
         fig_sc = px.scatter(df_filtered, x="Burnout", y="Engagement",
@@ -532,11 +544,13 @@ elif halaman == "🧠  Cognitive Load Monitor":
     st.markdown("<div style='color:#1E2761;font-weight:700;font-size:15px;margin-bottom:8px;'>📋 Data Lengkap Siswa</div>", unsafe_allow_html=True)
     disp = df_filtered[["Nama", "Kelas", "Kognitif", "Login_mnt", "Tugas_selesai", "Engagement", "Risiko"]].copy()
     disp.columns = ["Nama", "Kelas", "Beban Kognitif", "Login (mnt)", "Tugas (%)", "Engagement", "Risiko"]
-    st.dataframe(disp.style
-                 .background_gradient(subset=["Beban Kognitif"], cmap="RdYlGn_r")
-                 .background_gradient(subset=["Engagement"],     cmap="RdYlGn")
-                 .background_gradient(subset=["Tugas (%)"],      cmap="RdYlGn"),
-                 use_container_width=True, hide_index=True)
+    st.dataframe(
+        disp.style
+            .apply(make_gradient_styler(reverse=True),  subset=["Beban Kognitif"])  # merah=tinggi, hijau=rendah
+            .apply(make_gradient_styler(reverse=False), subset=["Engagement"])      # hijau=tinggi, merah=rendah
+            .apply(make_gradient_styler(reverse=False), subset=["Tugas (%)"]),      # hijau=tinggi, merah=rendah
+        use_container_width=True, hide_index=True
+    )
 
 
 # ════════════════════════════════════════════════════════════
@@ -565,7 +579,7 @@ elif halaman == "👩‍🏫  Kualitas Guru":
                 r=vals + [vals[0]],
                 theta=categories + [categories[0]],
                 fill="toself", name=str(t["Nama"]),
-                line_color=col, fillcolor=hex_to_rgba(col, 0.16),
+                line_color=col, fillcolor=col + "28",
             ))
 
         fig_radar.update_layout(
@@ -769,8 +783,10 @@ elif halaman == "⚖️  Fairness Perception":
         gap_df["Gap"] = gap_df["Fairness"] - gap_df["Engagement"]
         gap_df["Status Gap"] = gap_df["Gap"].apply(
             lambda g: "⚠️ Perlu Perhatian" if g > 20 else "🔴 Berbahaya" if g < -10 else "✓ Normal")
-        st.dataframe(gap_df.style.background_gradient(subset=["Gap"], cmap="RdYlGn"),
-                     use_container_width=True, hide_index=True)
+        st.dataframe(
+            gap_df.style.apply(make_gradient_styler(reverse=False), subset=["Gap"]),
+            use_container_width=True, hide_index=True
+        )
 
 
 # ════════════════════════════════════════════════════════════
@@ -778,7 +794,8 @@ elif halaman == "⚖️  Fairness Perception":
 # ════════════════════════════════════════════════════════════
 elif halaman == "🤖  Early Warning AI":
     st.markdown("<h1 style='color:#1E2761;font-size:22px;font-weight:900;margin:0 0 4px;'>🤖 Mesin Prediksi: Early Warning System (EWS) Berbasis AI</h1>", unsafe_allow_html=True)
-    
+    st.markdown("<p style='color:#6B7694;font-size:14px;margin:0 0 20px;'>Output sistem ini adalah <em>actionable care</em>, bukan sekadar pelaporan statistik. Algoritma: AI + SMOTE Engine.</p>", unsafe_allow_html=True)
+
     levels = [
         {"level": "LEVEL MERAH",  "color": "#E55353", "risiko_key": "KRITIS",
          "action": "Intervensi segera. Koordinasi guru BK, wali kelas, kepala sekolah. Laporan ke Dapodik dalam 24 jam.", "icon": "🔴"},
@@ -1016,7 +1033,7 @@ st.markdown("""
         🎓 Tim Universitas Pekalongan
     </div>
     <div style='color:#6B7694;font-size:12px;margin-top:4px;'>
-        FKIP · Program Studi Pendidikan Matematika · 2025/2026
+        FKIP · Program Studi Pendidikan Matematika · 2024/2025
     </div>
     <div style='color:#AABCD6;font-size:11px;margin-top:6px;'>
         LMS Engagement Audit v2.0 · Prototipe Deteksi Dini Quiet Quitting
