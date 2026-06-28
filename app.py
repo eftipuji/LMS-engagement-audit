@@ -240,6 +240,38 @@ def make_gradient_styler(reverse=False):
         return [_gradient_color(v, vmin, vmax, reverse) for v in s]
     return _style_func
 
+# ── Helper kompatibilitas rerun ──
+# st.rerun() baru ada sejak Streamlit 1.27. Di versi lebih lama (atau
+# environment Streamlit Cloud yang belum ter-update) atributnya tidak ada
+# sama sekali, sehingga memicu AttributeError tepat saat tombol Simpan/Hapus
+# di menu Kualitas Guru ditekan. Fungsi ini mencoba semua nama yang pernah
+# dipakai Streamlit, dari yang terbaru ke yang paling lama.
+def safe_rerun():
+    if hasattr(st, "rerun"):
+        st.rerun()
+    elif hasattr(st, "experimental_rerun"):
+        st.experimental_rerun()
+    else:
+        st.warning("⚠️ Versi Streamlit Anda tidak mendukung auto-refresh. Silakan muat ulang halaman secara manual.")
+
+# ── Helper warna rgba dari hex (pengganti trik 'hex + alpha' yang tidak
+#    didukung konsisten di semua versi Plotly) ──
+def hex_to_rgba(hex_color, alpha=0.16):
+    hex_color = hex_color.lstrip("#")
+    r = int(hex_color[0:2], 16)
+    g = int(hex_color[2:4], 16)
+    b = int(hex_color[4:6], 16)
+    return f"rgba({r},{g},{b},{alpha})"
+
+# ── Helper cast aman ke int (menghindari ValueError jika nilai NaN/None/string) ──
+def safe_int(val, default=0):
+    try:
+        if pd.isna(val):
+            return default
+        return int(val)
+    except (TypeError, ValueError):
+        return default
+
 # ─── DATA ────────────────────────────────────────────────────────────────────
 @st.cache_data
 def load_data():
@@ -565,94 +597,100 @@ elif halaman == "👩‍🏫  Kualitas Guru":
     # ── TAB 1: Radar ──────────────────────────────────────────
     with tab_guru1:
         df_t = st.session_state.df_teacher
-        categories = ["Kecepatan Respons", "Umpan Balik", "Konsistensi", "Frekuensi Konseling", "Indeks Total"]
-        palette    = ["#1E2761", "#F5A623", "#2EC47F", "#E55353",
-                      "#9B59B6", "#00B4D8", "#E67E22", "#27AE60"]
+        if len(df_t) == 0:
+            st.info("Belum ada data guru. Tambahkan guru lewat tab '➕ Input / Tambah Guru'.")
+        else:
+            categories = ["Kecepatan Respons", "Umpan Balik", "Konsistensi", "Frekuensi Konseling", "Indeks Total"]
+            palette    = ["#1E2761", "#F5A623", "#2EC47F", "#E55353",
+                          "#9B59B6", "#00B4D8", "#E67E22", "#27AE60"]
 
-        fig_radar = go.Figure()
-        for i, (_, t) in enumerate(df_t.iterrows()):
-            respons_norm  = max(0, 100 - int(t["Respons_jam"]))
-            konseling_norm = min(100, int(t["Konseling"]) * 7)
-            vals = [respons_norm, int(t["Umpan_balik"]), int(t["Konsistensi"]), konseling_norm, int(t["Indeks"])]
-            col  = palette[i % len(palette)]
-            fig_radar.add_trace(go.Scatterpolar(
-                r=vals + [vals[0]],
-                theta=categories + [categories[0]],
-                fill="toself", name=str(t["Nama"]),
-                line_color=col, fillcolor=col + "28",
-            ))
+            fig_radar = go.Figure()
+            for i, (_, t) in enumerate(df_t.iterrows()):
+                respons_norm  = max(0, 100 - safe_int(t["Respons_jam"]))
+                konseling_norm = min(100, safe_int(t["Konseling"]) * 7)
+                vals = [respons_norm, safe_int(t["Umpan_balik"]), safe_int(t["Konsistensi"]), konseling_norm, safe_int(t["Indeks"])]
+                col  = palette[i % len(palette)]
+                fig_radar.add_trace(go.Scatterpolar(
+                    r=vals + [vals[0]],
+                    theta=categories + [categories[0]],
+                    fill="toself", name=str(t["Nama"]),
+                    line_color=col, fillcolor=hex_to_rgba(col, 0.16),
+                ))
 
-        fig_radar.update_layout(
-            polar=dict(
-                bgcolor="#F8F9FE",
-                radialaxis=dict(visible=True, range=[0, 100], gridcolor="#E8ECF4",
-                                tickfont=dict(color="#6B7694")),
-                angularaxis=dict(gridcolor="#E8ECF4", tickfont=dict(color="#1E2761")),
-            ),
-            paper_bgcolor="#FFFFFF", font={"color": "#1E2761"},
-            height=400, margin=dict(t=30, b=20, l=20, r=20),
-            legend=dict(bgcolor="#F0F3FA", bordercolor="#E8ECF4"),
-        )
-        st.plotly_chart(fig_radar, use_container_width=True, config={"displayModeBar": False})
+            fig_radar.update_layout(
+                polar=dict(
+                    bgcolor="#F8F9FE",
+                    radialaxis=dict(visible=True, range=[0, 100], gridcolor="#E8ECF4",
+                                    tickfont=dict(color="#6B7694")),
+                    angularaxis=dict(gridcolor="#E8ECF4", tickfont=dict(color="#1E2761")),
+                ),
+                paper_bgcolor="#FFFFFF", font={"color": "#1E2761"},
+                height=400, margin=dict(t=30, b=20, l=20, r=20),
+                legend=dict(bgcolor="#F0F3FA", bordercolor="#E8ECF4"),
+            )
+            st.plotly_chart(fig_radar, use_container_width=True, config={"displayModeBar": False})
 
     # ── TAB 2: Kartu Guru ─────────────────────────────────────
     with tab_guru2:
         df_t = st.session_state.df_teacher
-        cols_card = st.columns(2)
-        for idx, (_, t) in enumerate(df_t.iterrows()):
-            nama_guru    = str(t["Nama"])
-            mapel_guru   = str(t["Mapel"])
-            indeks_val   = int(t["Indeks"])
-            respons_val  = int(t["Respons_jam"])
-            konseling_val = int(t["Konseling"])
-            umpan_val    = int(t["Umpan_balik"])
-            konsisten_val = int(t["Konsistensi"])
+        if len(df_t) == 0:
+            st.info("Belum ada data guru. Tambahkan guru lewat tab '➕ Input / Tambah Guru'.")
+        else:
+            cols_card = st.columns(2)
+            for idx, (_, t) in enumerate(df_t.iterrows()):
+                nama_guru    = str(t["Nama"])
+                mapel_guru   = str(t["Mapel"])
+                indeks_val   = safe_int(t["Indeks"])
+                respons_val  = safe_int(t["Respons_jam"])
+                konseling_val = safe_int(t["Konseling"])
+                umpan_val    = safe_int(t["Umpan_balik"])
+                konsisten_val = safe_int(t["Konsistensi"])
 
-            if indeks_val > 80:
-                ind_color = "#2EC47F"
-            elif indeks_val > 60:
-                ind_color = "#1E2761"
-            elif indeks_val > 45:
-                ind_color = "#F5A623"
-            else:
-                ind_color = "#E55353"
+                if indeks_val > 80:
+                    ind_color = "#2EC47F"
+                elif indeks_val > 60:
+                    ind_color = "#1E2761"
+                elif indeks_val > 45:
+                    ind_color = "#F5A623"
+                else:
+                    ind_color = "#E55353"
 
-            respons_ok    = respons_val < 30
-            respons_color = "#2EC47F" if respons_ok else "#F5A623"
-            respons_icon  = "✓" if respons_ok else "⚠️"
-            konseling_color = "#E55353" if konseling_val <= 3 else "#2EC47F"
+                respons_ok    = respons_val < 30
+                respons_color = "#2EC47F" if respons_ok else "#F5A623"
+                respons_icon  = "✓" if respons_ok else "⚠️"
+                konseling_color = "#E55353" if konseling_val <= 3 else "#2EC47F"
 
-            umpan_bar    = bar_h(umpan_val,     color="#1E2761")
-            konsisten_bar = bar_h(konsisten_val, color="#2EC47F")
+                umpan_bar    = bar_h(umpan_val,     color="#1E2761")
+                konsisten_bar = bar_h(konsisten_val, color="#2EC47F")
 
-            with cols_card[idx % 2]:
-                st.markdown(f"""
-                <div class='kpi-card'>
-                  <div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;'>
-                    <div>
-                      <div style='color:#1E2761;font-weight:800;font-size:17px;'>{nama_guru}</div>
-                      <div style='color:#6B7694;font-size:12px;'>{mapel_guru}</div>
-                    </div>
-                    <div style='text-align:center;'>
-                      <div style='font-size:34px;font-weight:900;color:{ind_color};line-height:1;'>{indeks_val}</div>
-                      <div style='font-size:10px;color:#6B7694;'>Indeks Kualitas</div>
-                    </div>
-                  </div>
-                  <div style='display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;'>
-                    <div>
-                      <div style='font-size:11px;color:#6B7694;'>⏱ Kecepatan Respons</div>
-                      <div style='font-weight:700;color:{respons_color};'>{respons_val} jam {respons_icon}</div>
-                    </div>
-                    <div>
-                      <div style='font-size:11px;color:#6B7694;'>💬 Sesi Konseling</div>
-                      <div style='font-weight:700;color:{konseling_color};'>{konseling_val} sesi/bulan</div>
-                    </div>
-                  </div>
-                  <div style='font-size:11px;color:#6B7694;margin-bottom:4px;'>Bobot Umpan Balik</div>
-                  {umpan_bar}
-                  <div style='font-size:11px;color:#6B7694;margin-bottom:4px;margin-top:8px;'>Konsistensi Penilaian</div>
-                  {konsisten_bar}
-                </div>""", unsafe_allow_html=True)
+                with cols_card[idx % 2]:
+                    st.markdown(f"""
+                    <div class='kpi-card'>
+                      <div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;'>
+                        <div>
+                          <div style='color:#1E2761;font-weight:800;font-size:17px;'>{nama_guru}</div>
+                          <div style='color:#6B7694;font-size:12px;'>{mapel_guru}</div>
+                        </div>
+                        <div style='text-align:center;'>
+                          <div style='font-size:34px;font-weight:900;color:{ind_color};line-height:1;'>{indeks_val}</div>
+                          <div style='font-size:10px;color:#6B7694;'>Indeks Kualitas</div>
+                        </div>
+                      </div>
+                      <div style='display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;'>
+                        <div>
+                          <div style='font-size:11px;color:#6B7694;'>⏱ Kecepatan Respons</div>
+                          <div style='font-weight:700;color:{respons_color};'>{respons_val} jam {respons_icon}</div>
+                        </div>
+                        <div>
+                          <div style='font-size:11px;color:#6B7694;'>💬 Sesi Konseling</div>
+                          <div style='font-weight:700;color:{konseling_color};'>{konseling_val} sesi/bulan</div>
+                        </div>
+                      </div>
+                      <div style='font-size:11px;color:#6B7694;margin-bottom:4px;'>Bobot Umpan Balik</div>
+                      {umpan_bar}
+                      <div style='font-size:11px;color:#6B7694;margin-bottom:4px;margin-top:8px;'>Konsistensi Penilaian</div>
+                      {konsisten_bar}
+                    </div>""", unsafe_allow_html=True)
 
     # ── TAB 3: Input Guru Baru ────────────────────────────────
     with tab_guru3:
@@ -662,14 +700,14 @@ elif halaman == "👩‍🏫  Kualitas Guru":
         with st.form("form_guru"):
             fg1, fg2 = st.columns(2)
             with fg1:
-                inp_nama   = st.text_input("Nama Lengkap Guru *", placeholder="contoh: Bu Ratna")
-                inp_mapel  = st.text_input("Mata Pelajaran *",     placeholder="contoh: Matematika")
+                inp_nama   = st.text_input("Nama Lengkap Guru *", placeholder="contoh: Bu Ratna", key="inp_nama_guru")
+                inp_mapel  = st.text_input("Mata Pelajaran *",     placeholder="contoh: Matematika", key="inp_mapel_guru")
                 inp_respons = st.number_input("Kecepatan Respons (jam)", min_value=1, max_value=168, value=24,
-                                              help="Rata-rata waktu membalas pesan/tugas dalam jam")
+                                              help="Rata-rata waktu membalas pesan/tugas dalam jam", key="inp_respons_guru")
             with fg2:
-                inp_umpan     = st.slider("Bobot Umpan Balik (0–100)",  0, 100, 70)
-                inp_konsisten = st.slider("Konsistensi Penilaian (0–100)", 0, 100, 75)
-                inp_konseling = st.number_input("Sesi Konseling per Bulan", min_value=0, max_value=30, value=4)
+                inp_umpan     = st.slider("Bobot Umpan Balik (0–100)",  0, 100, 70, key="inp_umpan_guru")
+                inp_konsisten = st.slider("Konsistensi Penilaian (0–100)", 0, 100, 75, key="inp_konsisten_guru")
+                inp_konseling = st.number_input("Sesi Konseling per Bulan", min_value=0, max_value=30, value=4, key="inp_konseling_guru")
 
             # Hitung indeks otomatis
             respons_norm_inp  = max(0, 100 - inp_respons)
@@ -713,7 +751,7 @@ elif halaman == "👩‍🏫  Kualitas Guru":
                         [st.session_state.df_teacher, new_row], ignore_index=True
                     )
                     st.success(f"✅ Guru **{inp_nama}** berhasil ditambahkan ke sistem!")
-                st.rerun()
+                safe_rerun()
 
         # Tabel data guru saat ini
         st.markdown("<div style='color:#1E2761;font-weight:700;font-size:14px;margin:20px 0 8px;'>📋 Daftar Guru Saat Ini</div>", unsafe_allow_html=True)
@@ -721,15 +759,18 @@ elif halaman == "👩‍🏫  Kualitas Guru":
 
         # Tombol hapus
         st.markdown("<div style='color:#6B7694;font-size:13px;margin-top:12px;margin-bottom:6px;'>🗑️ Hapus data guru:</div>", unsafe_allow_html=True)
-        nama_hapus = st.selectbox("Pilih guru yang akan dihapus",
-                                  ["— pilih —"] + st.session_state.df_teacher["Nama"].tolist(),
-                                  key="hapus_guru")
-        if st.button("Hapus Guru Terpilih") and nama_hapus != "— pilih —":
-            st.session_state.df_teacher = st.session_state.df_teacher[
-                st.session_state.df_teacher["Nama"] != nama_hapus
-            ].reset_index(drop=True)
-            st.success(f"🗑️ Data **{nama_hapus}** telah dihapus.")
-            st.rerun()
+        if len(st.session_state.df_teacher) == 0:
+            st.caption("Tidak ada data guru untuk dihapus.")
+        else:
+            nama_hapus = st.selectbox("Pilih guru yang akan dihapus",
+                                      ["— pilih —"] + st.session_state.df_teacher["Nama"].tolist(),
+                                      key="hapus_guru")
+            if st.button("Hapus Guru Terpilih", key="btn_hapus_guru") and nama_hapus != "— pilih —":
+                st.session_state.df_teacher = st.session_state.df_teacher[
+                    st.session_state.df_teacher["Nama"] != nama_hapus
+                ].reset_index(drop=True)
+                st.success(f"🗑️ Data **{nama_hapus}** telah dihapus.")
+                safe_rerun()
 
 
 # ════════════════════════════════════════════════════════════
